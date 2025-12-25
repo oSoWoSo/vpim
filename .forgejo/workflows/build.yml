@@ -189,9 +189,7 @@ jobs:
           echo "Current branch is: $(git branch --show-current)"
           echo "tests content: $(ls tests/)"
           echo "path is: $(pwd)"
-          su - runner -c "cp /workspace/$FORGEJO_REPOSITORY/.forgejo/tests.md /home/runner/
-          cp /workspace/$FORGEJO_REPOSITORY/xut /home/runner/"
-          cp .forgejo/tests.md ./ # For sudo run
+          cp xut /home/runner/
 
       - name: Create build tests
         run: |
@@ -201,13 +199,14 @@ jobs:
             pkgdir="${tpl%/template}"
             pkgname="${pkgdir##*/}"
             echo "Creating test for $pkgname"
-            printf "## %d. build %s\n\nTest if xut will build %s\n\n\`\`\`bash\n%-30s#=> --egrep Successfully build %s\n\`\`\`\n\n" \
+            printf "## %d. build %s\n\nTest if xut will build %s\n\n\`\`\`bash\n%-35s #=> --egrep Successfully build %s\n\`\`\`\n\n" \
             "$n" "$pkgname" "$pkgname" "$ ./xut -b $pkgname" "$pkgname" >> .forgejo/tests.md
             ((n++))
           done
           echo "Tests created successfully"
           echo "Content of Tests.md file:"
           cat .forgejo/tests.md
+          cp .forgejo/tests.md /home/runner/
 
       - name: xut clitest
         continue-on-error: true
