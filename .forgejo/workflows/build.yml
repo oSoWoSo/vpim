@@ -199,7 +199,7 @@ jobs:
             pkgdir="${tpl%/template}"
             pkgname="${pkgdir##*/}"
             echo "Creating test for $pkgname"
-            printf "## %d. build %s\n\nTest if xut will build %s\n\n\`\`\`bash\n%-35s #=> --egrep Successfully build %s\n\`\`\`\n\n" \
+            printf "## %d. build %s\n\nTest if xut will build %s\n\n\`\`\`bash\n%-50s #=> --egrep Successfully build %s\n\`\`\`\n\n" \
             "$n" "$pkgname" "$pkgname" "$ ./xut -b $pkgname" "$pkgname" >> .forgejo/tests.md
             ((n++))
           done
@@ -207,6 +207,7 @@ jobs:
           echo "Content of Tests.md file:"
           cat .forgejo/tests.md
           cp .forgejo/tests.md /home/runner/
+          cp .forgejo/xutconf /home/runner/
 
       - name: xut clitest
         continue-on-error: true

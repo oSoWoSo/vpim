@@ -86,7 +86,7 @@ $
 Test if xut sync repos correctly
 
 ```bash
-$ ./xut -s                          #=> --egrep ^templates in void-packages:|restricted templates:|Templates in abyss-packages:
+$ ./xut -s                          #=> --egrep ^templates in void-packages:|restricted templates:|Templates in abyss-packages:|Templates in vpim:
 ```
 
 ## 0. - xut update
