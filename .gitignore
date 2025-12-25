@@ -1,3 +1,19 @@
-hostdir/
-masterdir-x86_64/
-.*
+*.swo
+*.swp
+*~
+\#*#
+
+# exclude everything in root except files and directories for vpim
+/*
+!/.github
+!/.forgejo
+!/.gitignore
+!/srcpkgs
+!/99-repository-vpim.conf
+!/LICENSE
+!/README
+!/TODO
+!/update.sh
+!/shlibs_append
+!/shlibs_remove
+!/xut
