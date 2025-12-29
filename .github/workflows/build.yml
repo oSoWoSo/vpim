@@ -27,8 +27,9 @@ jobs:
           mkdir -p /home/runner
           chown -R runner:runner /home/runner
           chown -R runner:runner $RUNNER_WORKSPACE
-          git config --global --add safe.directory "$RUNNER_WORKSPACE"
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          #git config --global --add safe.directory "$RUNNER_WORKSPACE"
+          #git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory /__w/*
           cd /home/runner
           # Setup passwordless sudo for xi
           echo "runner ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/runner
