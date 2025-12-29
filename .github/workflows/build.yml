@@ -19,9 +19,18 @@ jobs:
     steps:
       - name: Install dependencies and create runner user
         run: |
+          echo
+          echo "Sync and update xbps"
+          echo
           xbps-install -Syu xbps
+          echo
+          echo "Install updates"
+          echo
           xbps-install -yu
-          xbps-install -y bash curl git jq make ncurses nodejs shellcheck shfmt sudo xtools
+          echo
+          echo "Install packages"
+          echo
+          xbps-install -y bash curl git jq make ncurses nodejs shellcheck shfmt sudo tree xtools
           echo
           echo "Add unprivileged 'runner' user"
           echo
@@ -35,8 +44,11 @@ jobs:
           echo
           echo "Add git safe.directory"
           echo
-          #git config --global --add safe.directory "$RUNNER_WORKSPACE"
+          git config --global --add safe.directory "$RUNNER_WORKSPACE/*"
           git config --global --add safe.directory "$GITHUB_WORKSPACE/*"
+          git config --global --add safe.directory '/__w/vpim/vpim/*'
+          mkdir -p .xut/_void-linux_void-packages/hostdir/binpkgs
+          git config --global --add safe.directory '/__w/vpim/vpim/.xut/_void-linux_void-packages/hostdir/binpkgs/*'
           #git config --global --add safe.directory /__w/*
           cd /home/runner
           echo
@@ -210,4 +222,7 @@ jobs:
         run: |
           echo "#TODO"
           echo "Builded packages:"
-          ls -la /home/runner/.xut/_void-linux_void-packages/hostdir/binpkgs/
+          ls -la .xut/_void-linux_void-packages/hostdir/binpkgs/
+          echo
+          echo "Directory tree"
+          tree -d
