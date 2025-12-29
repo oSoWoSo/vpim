@@ -50,6 +50,8 @@ jobs:
           echo "chown"
           mkdir -p /home/builder
           chown -R builder:builder . &&
+          chown -R builder:builder /github/home &&
+          chown -R builder:builder /home/builder &&
           echo
           echo "Add git safe.directory"
           echo
@@ -203,10 +205,10 @@ jobs:
 
           echo "Content of Tests.md file:"
           cat .forgejo/tests.md
-          cp .forgejo/tests.md /home/builder/
-          cp .forgejo/xutconf /home/builder/
-          cp .forgejo/xutconf /__w/vpim/vpim/
-          sudo -Eu builder cp .forgejo/xutconf "${HOME}/"
+          cp .forgejo/tests.md /home/builder/ || echo "can't copy tests.md to /home/builder/"
+          cp .forgejo/xutconf /home/builder/ || echo "can't copy xutconf to /home/builder/"
+          cp .forgejo/xutconf /__w/vpim/vpim/ || echo "can't copy xutconf to /__w/vpim/vpim/"
+          sudo -Eu builder cp .forgejo/xutconf /github/home/ || echo "can't copy xutconf to /github/home/"
 
       - name: xut test
         continue-on-error: true
