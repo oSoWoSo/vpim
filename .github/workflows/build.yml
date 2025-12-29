@@ -160,7 +160,7 @@ jobs:
           mv clitest /usr/bin
 
           cp xut /home/builder/
-		  cp xut /github/home/
+          cp xut /github/home/
 
           # Generate tests
           n=1
