@@ -205,8 +205,8 @@ jobs:
       - name: xut test
         continue-on-error: true
         run: |
+          echo "Current path: $(pwd)"
           su - runner -c "
-            echo "Current path: $(pwd)"
             export GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER
             ./xut -s
             ./xut -lb xut"
