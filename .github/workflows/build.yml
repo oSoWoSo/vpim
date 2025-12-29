@@ -222,7 +222,7 @@ jobs:
         run: |
           echo "#TODO"
           echo "Builded packages:"
-          ls -la tmp/xut-repos/_void-linux_void-packages/hostdir/binpkgs/ || echo "Directory not found"
+          ls -la /tmp/xut-repos/_void-linux_void-packages/hostdir/binpkgs/ || echo "Directory not found"
           echo
           echo "Directory tree"
           tree -d
