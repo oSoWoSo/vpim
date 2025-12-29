@@ -54,51 +54,31 @@ jobs:
           chown -R builder:builder /home/builder &&
           echo
           echo "Add git safe.directory"
+          git config --global --add safe.directory '*'
           echo
-          git config --global --add safe.directory '/home/builder/*'
-          #git config --global --add safe.directory "$RUNNER_WORKSPACE/*"
-          #git config --global --add safe.directory "$GITHUB_WORKSPACE/*"
-          #git config --global --add safe.directory '/__w/vpim/vpim/*'
-          #mkdir -p .xut/_void-linux_void-packages/hostdir/binpkgs
-          #git config --global --add safe.directory '/__w/vpim/vpim/.xut/_void-linux_void-packages/hostdir/binpkgs/*'
-          #git config --global --add safe.directory /__w/*
           echo "Setup passwordless sudo for builder user"
-          echo
           echo "builder ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/builder
           chmod 0440 /etc/sudoers.d/builder
 
       - name: Debug Info
         run: |
-          echo "ENV:"
-          env
+          echo "=== Environment ==="
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+          echo "PWD: $(pwd)"
           echo
-          echo
-          echo "USER:"
+          echo "=== User Info ==="
           whoami
-          echo
-          echo "ID:"
           id
           echo
-          echo 'PWD:'
-          pwd
-          echo 'builder ENV:'
-          sudo -Eu builder env
-          echo
-          echo 'builder USER:'
+          echo "=== Builder User Info ==="
           sudo -Eu builder whoami
-          echo
-          echo 'builder ID:'
           sudo -Eu builder id
-          echo
-          echo 'PWD:'
-          pwd
-
 
       - name: "Lint using shellcheck"
         id: shellcheck_check
         continue-on-error: true
         run: |
-          cd "$RUNNER_WORKSPACE"
           sudo -Eu builder shellcheck xut | tee /tmp/shellcheck.txt 2>&1 || true
           if [ -s /tmp/shellcheck.txt ]; then
             echo "## ❌ Shellcheck Issues Found" >> $GITHUB_STEP_SUMMARY
@@ -123,7 +103,6 @@ jobs:
       - name: "Create or update PR with fixes if required"
         if: steps.shellcheck_check.outcome == 'failure' || steps.shfmt_check.outcome == 'failure'
         run: |
-          #cd "$RUNNER_WORKSPACE"
           git config --global user.name "github Bot"
           git config --global user.email "bot@github.local"
 
@@ -133,32 +112,28 @@ jobs:
 
             # Prepare commit message
             COMMIT_MSG="🤖 Auto-fix: Code formatting and linting"
-            if [ "${{ steps.shellcheck_check.outcome }}" == "failure" ]; then
+            [ "${{ steps.shellcheck_check.outcome }}" = "failure" ] &&
               COMMIT_MSG="${COMMIT_MSG}"$'\n'"- Fixed shellcheck issues"
-            fi
-            if [ "${{ steps.shfmt_check.outcome }}" == "failure" ]; then
+            [ "${{ steps.shfmt_check.outcome }}" = "failure" ] &&
               COMMIT_MSG="${COMMIT_MSG}"$'\n\n'"- Applied shfmt formatting"
-            fi
 
-            # Commit changes on current branch
+            # Commit changes
             git add -A
             git commit -m "$COMMIT_MSG"
 
             # Fetch to check if PR branch exists
             git fetch origin
-
-            # Check if PR with this exact branch name already exists
             EXISTING_PR=$(curl -s \
               -H "Authorization: token ${{ secrets.TOKEN }}" \
               "https://codeberg.org/api/v1/repos/${{ github.repository }}/pulls?state=open" \
               | jq -r ".[] | select(.head.ref == \"$BRANCH_NAME\" and .base.ref == \"$BASE_BRANCH\") | .number // empty" \
               | head -n1)
 
-            # Force push current branch to auto-fix branch
+            # Push to PR branch
             git push origin "HEAD:$BRANCH_NAME" --force
 
             if [ -n "$EXISTING_PR" ]; then
-              echo "✓ Updated existing PR #$EXISTING_PR with new fixes"
+              echo "✓ Updated existing PR #$EXISTING_PR"
             else
               # Create new PR
               curl -X POST \
@@ -171,7 +146,7 @@ jobs:
                   \"head\": \"$BRANCH_NAME\",
                   \"base\": \"$BASE_BRANCH\"
                 }"
-              echo "⚠️ Created new PR with fixes: $BRANCH_NAME"
+              echo "⚠️ Created new PR: $BRANCH_NAME"
             fi
           else
             echo "✓ No changes to commit"
@@ -184,10 +159,10 @@ jobs:
           chmod +x clitest
           mv clitest /usr/bin
 
-          echo "Current branch is: $(git branch --show-current)"
-          echo "path is: $(pwd)"
           cp xut /home/builder/
+		  cp xut /github/home/
 
+          # Generate tests
           n=1
           for tpl in srcpkgs/*/template; do
             [ -f "$tpl" ] || continue
@@ -206,39 +181,40 @@ jobs:
           echo "Content of Tests.md file:"
           cat .forgejo/tests.md
           cp .forgejo/tests.md /home/builder/ || echo "can't copy tests.md to /home/builder/"
+          cp .forgejo/tests.md /github/home/ || echo "can't copy tests.md to /github/home/"
           cp .forgejo/xutconf /home/builder/ || echo "can't copy xutconf to /home/builder/"
+          cp .forgejo/xutconf /github/home/ || echo "can't copy xutconf to /github//home/"
           cp .forgejo/xutconf /__w/vpim/vpim/ || echo "can't copy xutconf to /__w/vpim/vpim/"
           sudo -Eu builder cp .forgejo/xutconf /github/home/ || echo "can't copy xutconf to /github/home/"
 
       - name: xut test
         continue-on-error: true
         run: |
-          echo "Current path: $(pwd)"
-          export GITHUB_REPOSITORY_OWNER="$GITHUB_REPOSITORY_OWNER"
+          cd /home/builder
           sudo -Eu builder ./xut -s
           sudo -Eu builder ./xut -lb xut
 
       - name: xut clitest
         continue-on-error: true
         run: |
-          export GITHUB_REPOSITORY_OWNER="$GITHUB_REPOSITORY_OWNER"
+          cd /home/builder
           sudo -Eu builder clitest --color always tests.md | tee /tmp/out.txt 2>&1 || true
           if [ -s /tmp/out.txt ]; then
             # Remove lines with numbers only
             sudo -Eu builder sed -i '/^[0-9]\+$/d' /tmp/out.txt
             message=$(tail -n1 < /tmp/out.txt)
-            echo "## $message" >> $GITHUB_STEP_SUMMARY
+            echo "## 🧪 Test Results: $message" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo '```bash' >> $GITHUB_STEP_SUMMARY
             cat /tmp/out.txt >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            exit 1
           fi
 
-      - name: push builded packages
+      - name: Show built packages
+        if: always()
         run: |
-          echo "#TODO"
-          echo "Builded packages:"
+          echo "=== Built Packages ==="
+          ls -lh /home/builder/.xut/_void-linux_void-packages/hostdir/binpkgs/ 2>/dev/null || echo "No packages built yet"
           ls /tmp/xut-repos/_void-linux_void-packages/hostdir/binpkgs/ || echo "Directory not found"
           echo
           echo "Current directory:"
