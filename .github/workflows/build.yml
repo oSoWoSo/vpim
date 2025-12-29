@@ -218,7 +218,7 @@ jobs:
         continue-on-error: true
         run: |
           export GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER
-          sudo -Eu builder clitest --color always tests.md" | tee /tmp/out.txt 2>&1 || true
+          sudo -Eu builder clitest --color always tests.md | tee /tmp/out.txt 2>&1 || true
           if [ -s /tmp/out.txt ]; then
             # Remove lines with numbers only
             sudo -Eu builder sed -i '/^[0-9]\+$/d' /tmp/out.txt
