@@ -200,7 +200,7 @@ jobs:
             pkgname="${pkgdir##*/}"
             echo "Creating test for $pkgname"
             printf "## %d. build %s\n\nTest if xut will build %s\n\n\`\`\`bash\n%-50s #=> --egrep Successfully build %s\n\`\`\`\n\n" \
-            "$n" "$pkgname" "$pkgname" "$ ./xut -b $pkgname" "$pkgname" >> .forgejo/tests.md
+            "$n" "$pkgname" "$pkgname" "$ ./xut -lb $pkgname" "$pkgname" >> .forgejo/tests.md
             ((n++))
           done
           echo "Tests created successfully"
@@ -217,4 +217,7 @@ jobs:
             clitest --color always tests.md"
 
       - name: push builded packages
-        run: echo "#TODO"
+        run: |
+          echo "#TODO"
+          echo "Builded packages:"
+          ls -la /home/runner/.xut/_void-linux_void-packages/hostdir/binpkgs/
