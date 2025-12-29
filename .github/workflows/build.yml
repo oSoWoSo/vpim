@@ -11,13 +11,18 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: ghcr.io/void-linux/void-glibc-full
-      #options: --user runner
-      #env:
-       # SHELLSPEC_VERSION: '0.28.1'
+    container:
+      image: 'ghcr.io/void-linux/void-glibc-full:20250616R1'
+      options: --platform linux/amd64 --privileged
+      volumes:
+        - /dev:/dev
+      env:
+        ARCH: x86_64
+        BOOTSTRAP: x86_64
+        TEST: 1
 
     steps:
-      - name: Install dependencies and create runner user
+      - name: Prepare container
         run: |
           echo
           echo "Sync and update xbps"
@@ -30,34 +35,33 @@ jobs:
           echo
           echo "Install packages"
           echo
-          xbps-install -y bash curl git jq make ncurses nodejs shellcheck shfmt sudo tree xtools
+          xbps-install -y bash curl git grep jq make ncurses nodejs shellcheck shfmt sudo tree xtools
+
+      #- uses: actions/checkout@v5
+      - name: Clone and checkout
+        uses: classabbyamp/treeless-checkout-action@v1
+
+      - name: Prepare
+        run: |
+          echo "Add unprivileged 'builder' user"
           echo
-          echo "Add unprivileged 'runner' user"
-          echo
-          useradd -m -u 1000 -s /bin/sh runner
-          mkdir -p /home/runner
+          useradd -G xbuilder -M builder
           echo
           echo "chown"
-          echo
-          chown -R runner:runner /home/runner
-          chown -R runner:runner $RUNNER_WORKSPACE
+          chown -R builder:builder . &&
           echo
           echo "Add git safe.directory"
           echo
-          git config --global --add safe.directory "$RUNNER_WORKSPACE/*"
-          git config --global --add safe.directory "$GITHUB_WORKSPACE/*"
-          git config --global --add safe.directory '/__w/vpim/vpim/*'
-          mkdir -p .xut/_void-linux_void-packages/hostdir/binpkgs
-          git config --global --add safe.directory '/__w/vpim/vpim/.xut/_void-linux_void-packages/hostdir/binpkgs/*'
+          #git config --global --add safe.directory "$RUNNER_WORKSPACE/*"
+          #git config --global --add safe.directory "$GITHUB_WORKSPACE/*"
+          #git config --global --add safe.directory '/__w/vpim/vpim/*'
+          #mkdir -p .xut/_void-linux_void-packages/hostdir/binpkgs
+          #git config --global --add safe.directory '/__w/vpim/vpim/.xut/_void-linux_void-packages/hostdir/binpkgs/*'
           #git config --global --add safe.directory /__w/*
-          cd /home/runner
+          echo "Setup passwordless sudo for builder user"
           echo
-          echo "Setup passwordless sudo for xi"
-          echo
-          echo "runner ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/runner
-          chmod 0440 /etc/sudoers.d/runner
-
-      - uses: actions/checkout@v5
+          echo "builder ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/builder
+          chmod 0440 /etc/sudoers.d/builder
 
       - name: Debug Info
         run: |
@@ -73,27 +77,25 @@ jobs:
           echo
           echo 'PWD:'
           pwd
-          su - runner -c "
-            echo 'runner ENV:'
-            env
-            echo
-            echo
-            echo 'runner USER:'
-            whoami
-            echo
-            echo 'runner ID:'
-            id
-            echo
-            echo 'PWD:'
-            pwd
-            "
+          echo 'builder ENV:'
+          sudo -Eu builder env
+          echo
+          echo 'builder USER:'
+          sudo -Eu builder whoami
+          echo
+          echo 'builder ID:'
+          sudo -Eu builder id
+          echo
+          echo 'PWD:'
+          pwd
+
 
       - name: "Lint using shellcheck"
         id: shellcheck_check
         continue-on-error: true
         run: |
-          su - runner -c "cd '$RUNNER_WORKSPACE' &&
-            shellcheck xut" | tee /tmp/shellcheck.txt 2>&1 || true
+          cd "$RUNNER_WORKSPACE"
+          sudo -Eu builder shellcheck xut | tee /tmp/shellcheck.txt 2>&1 || true
           if [ -s /tmp/shellcheck.txt ]; then
             echo "## ❌ Shellcheck Issues Found" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -180,7 +182,7 @@ jobs:
 
           echo "Current branch is: $(git branch --show-current)"
           echo "path is: $(pwd)"
-          cp xut /home/runner/
+          cp xut /home/builder/
 
           n=1
           for tpl in srcpkgs/*/template; do
@@ -189,7 +191,7 @@ jobs:
             pkgname="${pkgdir##*/}"
             echo "Creating test for $pkgname"
             printf "## %d. build %s\n\nTest if xut will build %s\n\n\`\`\`bash\n%-50s #=> --egrep Successfully build %s\n\`\`\`\n\n" \
-            "$n" "$pkgname" "$pkgname" "$ ./xut -b $pkgname" "$pkgname" >> .forgejo/tests.md
+            "$n" "$pkgname" "$pkgname" "$ ./xut -b $pkgname" "$pkgname" | sed '/^[0-9]\+$/d' >> .forgejo/tests.md
             n=$((n + 1))
           done
 
@@ -199,27 +201,25 @@ jobs:
 
           echo "Content of Tests.md file:"
           cat .forgejo/tests.md
-          cp .forgejo/tests.md /home/runner/
-          cp .forgejo/xutconf /home/runner/
+          cp .forgejo/tests.md /home/builder/
+          cp .forgejo/xutconf /home/builder/
 
       - name: xut test
         continue-on-error: true
         run: |
           echo "Current path: $(pwd)"
-          su - runner -c "
-            export GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER
-            ./xut -s
-            ./xut -lb xut"
+          sudo -Eu builder export GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER
+          sudo -Eu builder ./xut -s
+          sudo -Eu builder ./xut -lb xut
 
       - name: xut clitest
         continue-on-error: true
         run: |
-          su - runner -c "
-            export GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER
-            clitest --color always tests.md" | tee /tmp/out.txt 2>&1 || true
+          export GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER
+          sudo -Eu builder clitest --color always tests.md" | tee /tmp/out.txt 2>&1 || true
           if [ -s /tmp/out.txt ]; then
             # Remove lines with numbers only
-            sed -i '/^[0-9]\+$/d' /tmp/out.txt
+            sudo -Eu builder sed -i '/^[0-9]\+$/d' /tmp/out.txt
             message=$(tail -n1 < /tmp/out.txt)
             echo "## $message" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
