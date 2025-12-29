@@ -48,10 +48,12 @@ jobs:
       - name: Prepare
         run: |
           echo "chown"
+          mkdir -p /home/builder
           chown -R builder:builder . &&
           echo
           echo "Add git safe.directory"
           echo
+          git config --global --add safe.directory '/home/builder/*'
           #git config --global --add safe.directory "$RUNNER_WORKSPACE/*"
           #git config --global --add safe.directory "$GITHUB_WORKSPACE/*"
           #git config --global --add safe.directory '/__w/vpim/vpim/*'
