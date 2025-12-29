@@ -36,6 +36,10 @@ jobs:
           echo "Install packages"
           echo
           xbps-install -y bash curl git grep jq make ncurses nodejs shellcheck shfmt sudo tree xtools
+          echo
+          echo "Add unprivileged 'builder' user"
+          echo
+          useradd -G xbuilder -M builder
 
       #- uses: actions/checkout@v5
       - name: Clone and checkout
@@ -43,10 +47,6 @@ jobs:
 
       - name: Prepare
         run: |
-          echo "Add unprivileged 'builder' user"
-          echo
-          useradd -G xbuilder -M builder
-          echo
           echo "chown"
           chown -R builder:builder . &&
           echo
