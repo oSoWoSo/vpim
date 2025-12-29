@@ -22,16 +22,26 @@ jobs:
           xbps-install -Syu xbps
           xbps-install -yu
           xbps-install -y bash curl git jq make ncurses nodejs shellcheck shfmt sudo xtools
-          # Add unprivileged 'runner' user
+          echo
+          echo "Add unprivileged 'runner' user"
+          echo
           useradd -m -u 1000 -s /bin/sh runner
           mkdir -p /home/runner
+          echo
+          echo "chown"
+          echo
           chown -R runner:runner /home/runner
           chown -R runner:runner $RUNNER_WORKSPACE
+          echo
+          echo "Add git safe.directory"
+          echo
           #git config --global --add safe.directory "$RUNNER_WORKSPACE"
-          #git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git config --global --add safe.directory /__w/*
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/*"
+          #git config --global --add safe.directory /__w/*
           cd /home/runner
-          # Setup passwordless sudo for xi
+          echo
+          echo "Setup passwordless sudo for xi"
+          echo
           echo "runner ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/runner
           chmod 0440 /etc/sudoers.d/runner
 
@@ -171,7 +181,9 @@ jobs:
             n=$((n + 1))
           done
 
-          echo -e "\nTests created successfully\n"
+          echo
+          echo "Tests created successfully"
+          echo
 
           echo "Content of Tests.md file:"
           cat .forgejo/tests.md
@@ -185,7 +197,8 @@ jobs:
             export GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER
             clitest --color always tests.md" | tee /tmp/out.txt 2>&1 || true
           if [ -s /tmp/out.txt ]; then
-            echo "## ❌ clites Issues Found" >> $GITHUB_STEP_SUMMARY
+            message=$(tail -n1 < /tmp/out.txt)
+            echo "## $message" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo '```bash' >> $GITHUB_STEP_SUMMARY
             cat /tmp/out.txt >> $GITHUB_STEP_SUMMARY
