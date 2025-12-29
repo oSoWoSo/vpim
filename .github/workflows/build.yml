@@ -222,7 +222,11 @@ jobs:
         run: |
           echo "#TODO"
           echo "Builded packages:"
-          ls -la .xut/_void-linux_void-packages/hostdir/binpkgs/
+          ls -la /home/runner/.xut/_void-linux_void-packages/hostdir/binpkgs/
           echo
           echo "Directory tree"
+          tree -d
+          echo
+          echo "/tmp Directory tree"
+          cd /tmp
           tree -d
