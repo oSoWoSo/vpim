@@ -210,14 +210,14 @@ jobs:
         continue-on-error: true
         run: |
           echo "Current path: $(pwd)"
-          sudo -Eu builder export GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER
+          export GITHUB_REPOSITORY_OWNER="$GITHUB_REPOSITORY_OWNER"
           sudo -Eu builder ./xut -s
           sudo -Eu builder ./xut -lb xut
 
       - name: xut clitest
         continue-on-error: true
         run: |
-          export GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER
+          export GITHUB_REPOSITORY_OWNER="$GITHUB_REPOSITORY_OWNER"
           sudo -Eu builder clitest --color always tests.md | tee /tmp/out.txt 2>&1 || true
           if [ -s /tmp/out.txt ]; then
             # Remove lines with numbers only
