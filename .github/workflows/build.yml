@@ -202,6 +202,15 @@ jobs:
           cp .forgejo/tests.md /home/runner/
           cp .forgejo/xutconf /home/runner/
 
+      - name: xut test
+        continue-on-error: true
+        run: |
+          su - runner -c "
+            echo "Current path: $(pwd)"
+            export GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER
+            ./xut -s
+            ./xut -lb xut"
+
       - name: xut clitest
         continue-on-error: true
         run: |
