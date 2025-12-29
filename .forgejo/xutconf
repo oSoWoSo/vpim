@@ -10,4 +10,4 @@
 # void-packages and abyss-packages repos are always used.
 # if someone wants additional repos add the git repo clone url in the
 # addtional_repos variable as a list
-additional_repos="https://codeberg.org/RotaryBoot58/vpim"
+additionalRepos="https://codeberg.org/RotaryBoot58/vpim"

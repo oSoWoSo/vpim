@@ -81,6 +81,15 @@ $ echo "Start testing 'xut'"
 Start testing 'xut'
 $
 
+## 0. xut help
+  Check
+  - xutconf used
+  - xut version
+
+```bash
+$ ./xut -h                          #=> --egrep ^Using configuration from /home/runner/xutconf|Version: 0.4.2
+```
+
 ## 0. xut sync
 
 Test if xut sync repos correctly
