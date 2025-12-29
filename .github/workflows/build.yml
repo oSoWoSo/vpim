@@ -205,6 +205,8 @@ jobs:
           cat .forgejo/tests.md
           cp .forgejo/tests.md /home/builder/
           cp .forgejo/xutconf /home/builder/
+          cp .forgejo/xutconf /__w/vpim/vpim/
+          sudo -Eu builder cp .forgejo/xutconf "${HOME}/"
 
       - name: xut test
         continue-on-error: true
