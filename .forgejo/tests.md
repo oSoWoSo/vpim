@@ -87,7 +87,7 @@ $
   - xut version
 
 ```bash
-$ ./xut -h                          #=> --egrep ^Using configuration from /home/runner/xutconf|Version: 0.4.2
+$ ./xut -h                          #=> --egrep ^Using configuration from /home/runner/xutconf|Version: 0.4.3-dev
 ```
 
 ## 0. xut sync
