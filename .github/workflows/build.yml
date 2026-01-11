@@ -192,7 +192,7 @@ jobs:
         run: |
           cd /home/builder
           sudo -Eu builder ./xut -s
-          sudo -Eu builder ./xut -lb xut
+          sudo -Eu builder ./xut -b xut
 
       - name: xut clitest
         continue-on-error: true
